@@ -6,6 +6,7 @@ using a pre-trained SentenceTransformer model.
 """
 
 from sentence_transformers import SentenceTransformer
+from src.config import EMBEDDING_MODEL_NAME
 
 
 class TextEmbedder:
@@ -13,7 +14,7 @@ class TextEmbedder:
     Wrapper class for sentence embedding model.
     """
 
-    def __init__(self, model_name="all-MiniLM-L6-v2"):
+    def __init__(self, model_name=EMBEDDING_MODEL_NAME):
         self.model = SentenceTransformer(model_name)
 
     def encode(self, texts):

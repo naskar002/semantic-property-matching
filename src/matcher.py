@@ -2,7 +2,7 @@
 matcher.py
 
 This module computes match scores between all
-user–property pairs and ranks properties per user.
+user-property pairs and ranks properties per user.
 """
 
 import pandas as pd
@@ -10,11 +10,13 @@ import pandas as pd
 from src.text_builder import user_to_text, property_to_text
 from src.embedder import TextEmbedder
 from src.similarity import compute_similarity
+from src.feature_encoder import compute_numerical_similarity
+from src.config import USER_ID_COL, PROPERTY_ID_COL
 
 
 def compute_all_matches(users_df, properties_df, top_k=5):
     """
-    Compute match scores for all user–property pairs.
+    Compute match scores for all user-property pairs.
 
     Parameters:
         users_df (pd.DataFrame): User preferences dataframe
@@ -37,14 +39,21 @@ def compute_all_matches(users_df, properties_df, top_k=5):
 
     results = []
 
-    # ---- Compute similarity for each user–property pair ----
+    # ---- Compute similarity for each user-property pair ----
     for user_idx, user_embedding in enumerate(user_embeddings):
-        user_id = users_df.iloc[user_idx]["User ID"]
+        user_row = users_df.iloc[user_idx]
+        user_id = user_row[USER_ID_COL]
 
         for prop_idx, prop_embedding in enumerate(property_embeddings):
-            property_id = properties_df.iloc[prop_idx]["Property ID"]
+            property_row = properties_df.iloc[prop_idx]
+            property_id = property_row[PROPERTY_ID_COL]
 
-            score = compute_similarity(user_embedding, prop_embedding)
+            numerical_score = compute_numerical_similarity(user_row, property_row)
+            score = compute_similarity(
+                user_embedding,
+                prop_embedding,
+                numerical_score=numerical_score
+            )
 
             results.append({
                 "user_id": user_id,

@@ -8,15 +8,26 @@ user and property embeddings.
 import numpy as np
 from sklearn.metrics.pairwise import cosine_similarity
 
+from src.config import SEMANTIC_WEIGHT, NUMERICAL_WEIGHT
 
-def compute_similarity(user_embedding, property_embedding):
+
+def compute_similarity(
+    user_embedding,
+    property_embedding,
+    numerical_score=None,
+    semantic_weight=SEMANTIC_WEIGHT,
+    numerical_weight=NUMERICAL_WEIGHT,
+):
     """
-    Compute cosine similarity between two embeddings
-    and return a normalized match score.
+    Compute semantic similarity between two embeddings and optionally combine
+    with a numerical similarity score using weighted hybrid scoring.
 
     Parameters:
         user_embedding (np.ndarray): User embedding vector
         property_embedding (np.ndarray): Property embedding vector
+        numerical_score (float | None): Numerical similarity score (0-100)
+        semantic_weight (float): Weight for semantic similarity
+        numerical_weight (float): Weight for numerical similarity
 
     Returns:
         float: Match score between 0 and 100
@@ -27,12 +38,17 @@ def compute_similarity(user_embedding, property_embedding):
     property_embedding = np.array(property_embedding).reshape(1, -1)
 
     # Cosine similarity
-    similarity_score = cosine_similarity(
-        user_embedding,
-        property_embedding
-    )[0][0]
+    semantic_similarity = cosine_similarity(user_embedding, property_embedding)[0][0]
 
-    # Normalize to 0–100
-    match_score = round(similarity_score * 100, 2)
+    # Normalize to 0-100
+    semantic_score = round(semantic_similarity * 100, 2)
 
-    return match_score
+    if numerical_score is None:
+        return semantic_score
+
+    total_weight = semantic_weight + numerical_weight
+    if total_weight <= 0:
+        return semantic_score
+
+    hybrid_score = (semantic_score * semantic_weight + numerical_score * numerical_weight) / total_weight
+    return round(hybrid_score, 2)
